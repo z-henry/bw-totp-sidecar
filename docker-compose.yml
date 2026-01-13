@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  bw-totp-sidecar:
+    build: .
+    container_name: bw-totp-sidecar
+    restart: unless-stopped
+
+    environment:
+      # Bitwarden / Vaultwarden 服务地址（自建必填）
+      - BW_SERVER=https://bitwarden.example.com
+
+      # Bitwarden Personal API Key（示例值）
+      - BW_CLIENTID=user.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      - BW_CLIENTSECRET=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+
+      # 全自动解锁所需（示例值，生产请用 .env / secrets）
+      - BW_MASTER_PASSWORD=example-master-password
+
+      # HTTP 简单鉴权（可选）
+      - BWHELPER_TOKEN=example-very-secret-token
+
+      - PORT=8080
+      - TZ=Asia/Shanghai
+
+    ports:
+      - "18080:8080"
