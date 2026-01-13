@@ -28,6 +28,26 @@ bw-totp-sidecar
 Bitwarden / Vaultwarden  
 Used together with services that require TOTP-based login (e.g. MoviePilot, internal services, automation APIs).
 
+
+---
+
+## HTTP API
+
+### GET /health
+
+Health check endpoint.
+
+curl http://localhost:18080/health
+
+---
+
+### GET /otp?name=<ITEM_NAME>
+
+Get TOTP for a specific Bitwarden item by exact name match.
+
+curl -H "X-Auth: example-very-secret-token" "http://localhost:18080/otp?name=MoviePilot"
+
+---
 ## Security Model
 
 - Secrets are never exposed by Bitwarden APIs
