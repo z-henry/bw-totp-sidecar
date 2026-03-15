@@ -93,15 +93,21 @@ def bw_login_apikey() -> None:
         logger.info("Attempting Bitwarden API key login")
         run(["bw", "login", "--apikey"])
     except Exception as e:
+        if "userDecryptionOptions" in str(e):
+            logger.error(
+                "Bitwarden API key login failed because the server response is missing "
+                "userDecryptionOptions. This usually means the self-hosted server is too old "
+                "or incompatible with the current Bitwarden CLI."
+            )
         # 已登录 / 暂时网络问题都不硬崩
         logger.warning("Bitwarden API key login skipped or failed: %s", e)
 
-def bw_refresh() -> None:
+def bw_sync() -> None:
     try:
-        logger.debug("Refreshing Bitwarden vault cache")
-        run(["bw", "refresh"])
+        logger.debug("Syncing Bitwarden vault cache")
+        run(["bw", "sync"])
     except Exception as e:
-        logger.warning("Bitwarden refresh failed: %s", e)
+        logger.warning("Bitwarden sync failed: %s", e)
 
 def bw_status() -> dict:
     logger.debug("Checking Bitwarden status")
@@ -114,7 +120,16 @@ def bw_unlock_get_session() -> str:
     logger.info("Unlocking Bitwarden vault to get a fresh session")
     env = os.environ.copy()
     env["BW_MASTER_PASSWORD"] = BW_MASTER_PASSWORD
-    return run(["bw", "unlock", "--raw", "--passwordenv", "BW_MASTER_PASSWORD"], env=env)
+    try:
+        return run(["bw", "unlock", "--raw", "--passwordenv", "BW_MASTER_PASSWORD"], env=env)
+    except Exception as e:
+        if "You are not logged in" in str(e):
+            raise RuntimeError(
+                "You are not logged in. API key login likely failed earlier. "
+                "Check BW_CLIENTID/BW_CLIENTSECRET and whether your self-hosted server "
+                "is compatible with the current Bitwarden CLI."
+            ) from e
+        raise
 
 def get_cached_session() -> str:
     global BW_SESSION, BW_SESSION_TS
@@ -149,10 +164,10 @@ def get_totp_by_name(name: str) -> str:
     if not item_id:
         # 刷新一次再找
         logger.info("Item not found in current cache, refreshing and retrying: %s", name)
-        bw_refresh()
+        bw_sync()
         item_id = find_item_id(session, name)
         if not item_id:
-            logger.error("Bitwarden item not found after refresh: %s", name)
+            logger.error("Bitwarden item not found after sync: %s", name)
             raise RuntimeError(f"Item not found: {name}")
 
     try:
@@ -233,7 +248,7 @@ def main():
     logger.info("Starting bw-totp-sidecar version=%s on port %s", APP_VERSION, PORT)
     bw_config_server()
     bw_login_apikey()
-    bw_refresh()
+    bw_sync()
 
     # 可选：快速校验登录态（不强制崩）
     try:
