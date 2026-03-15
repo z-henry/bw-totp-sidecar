@@ -1,4 +1,10 @@
-FROM python:3.12-slim
+ARG PYTHON_BASE_IMAGE=python:3.12-slim
+FROM ${PYTHON_BASE_IMAGE}
+
+ARG APP_VERSION=dev
+
+LABEL org.opencontainers.image.title="bw-totp-sidecar"
+LABEL org.opencontainers.image.version="${APP_VERSION}"
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl unzip ca-certificates \
@@ -10,6 +16,7 @@ RUN curl -L "https://vault.bitwarden.com/download/?app=cli&platform=linux" -o /t
  && rm -f /tmp/bw.zip
 
 WORKDIR /app
+COPY VERSION /app/VERSION
 COPY app.py /app/app.py
 
 ENV PORT=8080

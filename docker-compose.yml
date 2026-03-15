@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   bw-totp-sidecar:
+    image: bw-totp-sidecar:latest
     build: .
     container_name: bw-totp-sidecar
     restart: unless-stopped

@@ -48,6 +48,30 @@ Get TOTP for a specific Bitwarden item by exact name match.
 curl -H "X-Auth: example-very-secret-token" "http://localhost:18080/otp?name=MoviePilot"
 
 ---
+
+## Versioning
+
+The release version is controlled by the checked-in `VERSION` file.
+
+- The app prints the version from `VERSION` on startup
+- Release images are tagged as `bw-totp-sidecar:<VERSION>`
+- The image metadata includes `org.opencontainers.image.version=<VERSION>`
+
+Example:
+
+```bash
+./build-image.sh
+```
+
+To release a new version, update `VERSION` first, then rebuild the image.
+
+If Docker Hub is not reachable in your environment, you can override the base image at build time:
+
+```bash
+BASE_IMAGE=<your-registry>/python:3.12-slim ./build-image.sh
+```
+
+---
 ## Security Model
 
 - Secrets are never exposed by Bitwarden APIs
